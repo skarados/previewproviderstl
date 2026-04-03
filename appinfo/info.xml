@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>previewproviderstl</id>
+	<name>STL Preview Provider</name>
+	<summary>A preview provider for STL model files</summary>
+	<description><![CDATA[Nextcloud app that allows users to generate stl/obj/3mf thumbnails. The app listens to 
+upload, edit and retrieve events and generates or updates an preview on demand.
+
+The app does not replace the existing on demand preview generation.]]>
+	</description>
+	<licence>AGPL</licence>
+	<author>Christian Witz</author>
+	<version>1.0.0</version>
+	<namespace>PreviewProviderSTL</namespace>
+	<category>multimedia</category>
+	<website>https://github.com/skarados/previewgeneratorstl</website>
+	<bugs>https://github.com/skarados/previewgeneratorstl/issues</bugs>
+	<repository type="git">https://github.com/skarados/previewgeneratorstl.git</repository>
+	<types>
+		<filesystem/>
+	</types>
+	<dependencies>
+		<php min-version="7.4" max-version="8.3" />
+		<nextcloud min-version="29" max-version="30" />
+	</dependencies>
+</info>
