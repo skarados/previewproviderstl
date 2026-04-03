@@ -20,7 +20,7 @@ The app does not replace the existing on demand preview generation.]]>
 		<filesystem/>
 	</types>
 	<dependencies>
-		<php min-version="7.4" max-version="8.3" />
-		<nextcloud min-version="29" max-version="30" />
+		<php min-version="7.4" max-version="8.4" />
+		<nextcloud min-version="29" max-version="32" />
 	</dependencies>
 </info>
