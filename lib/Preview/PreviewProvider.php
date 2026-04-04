@@ -48,8 +48,7 @@ abstract class PreviewProvider implements IProviderV2 {
 	 * @deprecated 23.0.0 pass option to \OCP\Preview\ProviderV2
 	 * @var string
 	 */
-	public static $stlBinary = "vendor/usr/bin/stl-thumb";
-	// $this->logger->debug("Using binary: " . self::$stlBinary);
+	public static $stlBinary = "/usr/bin/stl-thumb";
 
 	/** @var string */
 	private $binary;
