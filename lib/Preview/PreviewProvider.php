@@ -166,23 +166,7 @@ abstract class PreviewProvider implements IProviderV2 {
 			return null;
 		}
 
-		$inputPath = $absPath;
-		$rotationAngle = 0;
-
-		if ($this->isLocalFile($absPath)) {
-			$orientation = new STLOrientation($this->logger);
-			$rotationAngle = $orientation->calculateBestRotation($absPath);
-
-			if (abs($rotationAngle) > 5) {
-				$rotatedPath = $orientation->rotateSTL($absPath, $rotationAngle);
-				if ($rotatedPath !== null) {
-					$inputPath = $rotatedPath;
-					$this->tmpFiles[] = $rotatedPath;
-				}
-			}
-		}
-
-		$cmd = [$this->binary, '-s', $maxX, $inputPath, $tmpPath];
+		$cmd = [$this->binary, '-s', $maxX, $absPath, $tmpPath];
 
 		$desc = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
 		$proc = proc_open($cmd, $desc, $pipes);
