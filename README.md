@@ -1,45 +1,65 @@
-# Preview Generator
+# Preview Provider STL
 
-Nextcloud app that allows users to generate stl previews. The app listens to 
-upload, edit and retrieve events and generates or updates an preview on demand.
+Nextcloud app that generates thumbnail previews for 3D model files. The app listens to
+upload, edit and retrieve events and generates or updates a preview on demand.
 
 The app does not replace the existing on demand preview generation.
 
-## Currently supported file formats
+## Supported File Formats
 
-* `model/stl`
-* `model/obj`
-* `model/3mf`
+- `model/stl` (Stereolithography)
+- `model/obj` (Wavefront OBJ)
+- `model/3mf` (3D Manufacturing Format)
 
-## How to install
+## Requirements
 
-* Clone this repository into your Nextcloud app folder
+- Nextcloud 29-32
+- PHP 7.4+
 
-## How to use the app
+## Installation
 
-1. Install the app
-2. Enable the app
+1. Clone this repository into your Nextcloud `custom_apps` folder:
+   ```bash
+   cd /var/www/nextcloud/custom_apps
+   git clone https://github.com/skarados/previewgeneratorstl.git
+   ```
+2. Enable the app:
+   ```bash
+   occ app:enable previewproviderstl
+   ```
 
-## Known issues
+The bundled `stl-thumb` binary is included - no additional system packages needed.
 
-* Repository is not yet signed to install as a trusted plugin
+## Usage
 
-## How does the app work
+### Automatic Previews
 
-1. Listen to events that a file has been written, modified or accessed
-2. Creates or updates a thumbnail preview once every event if it is not existent
+Previews are generated automatically when users view 3D files in Nextcloud.
 
-## FAQ
+### Generate Previews Manually
 
-### I want to skip a folder and everything in/under it
+Use the OCC command to generate previews:
 
-Add an empty file with the name `.nomedia` in the folder you wish to skip. All files and subfolders of the folder containing `.nomedia` will also be skipped.
+```bash
+# Generate preview for a specific file by ID
+occ preview:generate-stl --file-id=12345
 
-### I want to reset/regenerate all previews
+# Generate previews for all STL files of a user
+occ preview:generate-stl username
 
-**WARNING:** This is not supported but it has been confirmed to work by multiple users. Proceed at your own risk. Always keep backups around.
+# Generate previews for a specific folder
+occ preview:generate-stl username --path="/Documents/3D"
 
-1. Remove the folder `your-nextcloud-data-directory/appdata_*/preview`
-2. *Optional:* change parameters `preview_max_x` and `preview_max_y` in `config.php` (e.g., to `512`), and change the `previewgenerator` app parameters `heightSizes`, `squareSizes` and `widthSizes` as per the README (or better yet, to a low value each, e.g. `512`, `256` and `512` respectively)
-3. Run `occ files:scan-app-data` (this will reset generated previews in the database)
-4. Run `occ preview:generate-all [user-id]` (this will run very fast if you did step 2) 
+# Generate previews for ALL users
+occ preview:generate-stl
+
+# Verbose output
+occ preview:generate-stl -v
+```
+
+## How It Works
+
+1. When a user views a 3D model file, Nextcloud's preview system requests a thumbnail
+2. The STL preview provider handles the request
+3. It uses the bundled `stl-thumb` binary to render the 3D model as an image
+4. The image is scaled to fit the requested dimensions and returned
