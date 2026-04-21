@@ -89,8 +89,7 @@ class GeneratePreviews extends Command
 				null,
 				InputOption::VALUE_NONE,
 				'Delete existing previews before generating new ones'
-			)
-			
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
