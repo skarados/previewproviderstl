@@ -13,15 +13,15 @@ The app does not replace the existing on demand preview generation.
 
 ## Features
 
-- **Auto-orientation**: Automatically detects flat models and rotates them for optimal visibility
 - Generates thumbnails on-demand via Nextcloud's preview system
-- No external dependencies - includes bundled `stl-thumb` binary
+- Uses bundled `stl-thumb` binary (with system binary fallback)
+- OCC command for batch preview generation
+- File size limit: 250MB
 
 ## Requirements
 
 - Nextcloud 29-32
 - PHP 7.4+
-- Maximum file size: 50MB (larger files are skipped)
 
 ## Installation
 
@@ -58,15 +58,23 @@ occ preview:generate-stl
 
 # Force regenerate (delete existing previews first)
 occ preview:generate-stl --force
-
-# Verbose output
-occ preview:generate-stl -v
 ```
+
+## Binary
+
+The app uses the `stl-thumb` binary to render thumbnails. It prefers:
+1. `/usr/bin/stl-thumb` (system binary if installed)
+2. Bundled binary in `vendor/stl-thumb-bin/stl-thumb`
+
+### Headless Servers
+
+For headless Nextcloud installations (no display), you may need to install:
+- `xvfb` package, OR
+- X11 libraries: `libxcursor1 libxrandr2 libxinerama1`
 
 ## How It Works
 
 1. When a user views a 3D model file, Nextcloud's preview system requests a thumbnail
-2. The STL preview provider analyzes the model's geometry to detect flatness
-3. If needed, the model is rotated automatically using pure PHP
-4. The bundled `stl-thumb` renders the 3D model as an image
-5. The image is scaled to fit the requested dimensions
+2. The STL preview provider passes the file to `stl-thumb`
+3. `stl-thumb` renders the 3D model as an image using OpenGL
+4. The image is scaled to fit the requested dimensions

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.2 – 2026-04-21
+### Fixed
+- Removed auto-orientation feature (caused crashes on some servers)
+- Fixed PHP warning with array offset on bool
+- Binary path: prefer system binary (/usr/bin/stl-thumb), fallback to bundled
+
+### Changed
+- Return to simple thumbnail generation without PHP processing
+
 ## 1.2.1 – 2026-04-21
 ### Fixed
 - Disabled auto-orientation (caused issues with complex models)
