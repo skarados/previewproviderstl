@@ -29,6 +29,7 @@ namespace OCA\PreviewProviderSTL\AppInfo;
 
 use OCA\PreviewProviderSTL\Preview\STL;
 use OCA\PreviewProviderSTL\Capabilities;
+use OCA\PreviewProviderSTL\Command\GeneratePreviews;
 
 use OC\PreviewManager;
 use OCA\Viewer\Event\LoadViewer;
@@ -61,10 +62,8 @@ class Application extends App implements IBootstrap {
 
 	public function register(IRegistrationContext $context): void {
 		$context->registerCapability(Capabilities::class);
-		// $context->registerEventListener(NodeWrittenEvent::class, PostWriteListener::class);
-		// $context->registerEventListener(BeforePreviewFetchedEvent::class, BeforeFetchPreviewListener::class);
-		
 		$context->registerPreviewProvider(STL::class, STL::MIMETYPE_REGEX);
+		$context->registerConsoleCommand(GeneratePreviews::class);
 	}
 
 	public function boot(IBootContext $context): void {

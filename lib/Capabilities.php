@@ -102,13 +102,21 @@ class Capabilities implements ICapability {
 
 	private ?array $capabilities = null;
 
+	/** @var IAppManager */
+	private $appManager;
+
+	/** @var string|null */
+	private $userId;
+
+	/** @var IURLGenerator */
+	private $urlGenerator;
+
 	public function __construct(
-		// private AppConfig $config,
-		// private PermissionManager $permissionManager,
-		private IAppManager $appManager,
-		private ?string $userId,
-		private IURLGenerator $urlGenerator
+		IAppManager $appManager,
+		?IURLGenerator $urlGenerator
 	) {
+		$this->appManager = $appManager;
+		$this->urlGenerator = $urlGenerator;
 	}
 
 	public function getCapabilities() {

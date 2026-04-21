@@ -76,8 +76,12 @@ abstract class PreviewProvider implements IProviderV2 {
 		// Lazily resolve the binary path (allows config override via options)
 		if (is_null($this->binary)) {
 			if (isset($this->options['stlBinary'])) {
-				// Allow config override for custom binary path
-				$this->binary = $this->options['stlBinary'];
+				// Allow config override for custom binary path - validate it's safe
+				$customPath = $this->options['stlBinary'];
+				// Only allow absolute paths to prevent path traversal
+				if (is_string($customPath) && strpos($customPath, '/') === 0) {
+					$this->binary = $customPath;
+				}
 			} elseif (is_string($this->stlBinary)) {
 				$this->binary = $this->stlBinary;
 			}
