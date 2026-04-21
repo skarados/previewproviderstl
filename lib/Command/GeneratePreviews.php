@@ -90,12 +90,7 @@ class GeneratePreviews extends Command
 				InputOption::VALUE_NONE,
 				'Delete existing previews before generating new ones'
 			)
-			->addOption(
-				'verbose',
-				'v',
-				InputOption::VALUE_NONE,
-				'Show detailed output'
-			);
+			
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
