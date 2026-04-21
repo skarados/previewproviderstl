@@ -334,11 +334,14 @@ class STLOrientation
 			}
 
 			$vertices = unpack('f12', substr($data, 12));
+			if ($vertices === false) {
+				break;
+			}
 
 			for ($v = 0; $v < 3; $v++) {
-				$x = $vertices[$v * 3 + 1];
-				$y = $vertices[$v * 3 + 2];
-				$z = $vertices[$v * 3 + 3];
+				$x = $vertices[$v * 3 + 1] ?? 0;
+				$y = $vertices[$v * 3 + 2] ?? 0;
+				$z = $vertices[$v * 3 + 3] ?? 0;
 
 				$minX = min($minX, $x);
 				$maxX = max($maxX, $x);
