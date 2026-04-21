@@ -60,9 +60,12 @@ abstract class PreviewProvider implements IProviderV2 {
 		$this->clientService = $clientService;
 		$this->logger = $logger;
 		$this->capabilitites = $capabilities->getCapabilities()['previewproviderstl'] ?? [];
-		// Use the bundled stl-thumb binary from the vendor directory
-		// This ensures the plugin works in Docker containers where /usr/bin/stl-thumb is not available
-		$this->stlBinary = dirname(__DIR__, 2) . '/vendor/stl-thumb-bin/stl-thumb';
+		// Prefer system binary if available, otherwise use bundled one
+		// System binary may work better in some environments
+		$this->stlBinary = '/usr/bin/stl-thumb';
+		if (!file_exists($this->stlBinary)) {
+			$this->stlBinary = dirname(__DIR__, 2) . '/vendor/stl-thumb-bin/stl-thumb';
+		}
 	}
 
 	// /**
@@ -164,11 +167,21 @@ abstract class PreviewProvider implements IProviderV2 {
 		}
 
 		$inputPath = $absPath;
+		$rotationAngle = 0;
 
-		// Skip rotation for problematic files (disable until properly tuned)
-		// Rotation can cause issues with complex models. Use default view instead.
+		if ($this->isLocalFile($absPath)) {
+			$orientation = new STLOrientation($this->logger);
+			$rotationAngle = $orientation->calculateBestRotation($absPath);
 
-		// Build command: stl-thumb -s [size] [input] [output]
+			if (abs($rotationAngle) > 5) {
+				$rotatedPath = $orientation->rotateSTL($absPath, $rotationAngle);
+				if ($rotatedPath !== null) {
+					$inputPath = $rotatedPath;
+					$this->tmpFiles[] = $rotatedPath;
+				}
+			}
+		}
+
 		$cmd = [$this->binary, '-s', $maxX, $inputPath, $tmpPath];
 
 		$desc = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
