@@ -13,9 +13,9 @@ The app does not replace the existing on demand preview generation.]]>
 	<version>1.0.0</version>
 	<namespace>PreviewProviderSTL</namespace>
 	<category>multimedia</category>
-	<website>https://github.com/skarados/previewgeneratorstl</website>
-	<bugs>https://github.com/skarados/previewgeneratorstl/issues</bugs>
-	<repository type="git">https://github.com/skarados/previewgeneratorstl.git</repository>
+	<website>https://github.com/skarados/previewproviderstl</website>
+	<bugs>https://github.com/skarados/previewproviderstl/issues</bugs>
+	<repository type="git">https://github.com/skarados/previewproviderstl.git</repository>
 	<types>
 		<filesystem/>
 	</types>
