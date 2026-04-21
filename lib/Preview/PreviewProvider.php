@@ -44,17 +44,25 @@ abstract class PreviewProvider implements IProviderV2 {
 	/** @var array */
 	protected $tmpFiles = [];
 
-	/**
-	 * @deprecated 23.0.0 pass option to \OCP\Preview\ProviderV2
-	 * @var string
-	 */
-	public static $stlBinary = "/usr/bin/stl-thumb";
+	/** @var string */
+	private $stlBinary;
 
 	/** @var string */
 	private $binary;
 
-	public function __construct(private IClientService $clientService, Capabilities $capabilities, private LoggerInterface $logger) {
+	/** @var IClientService */
+	private $clientService;
+
+	/** @var LoggerInterface */
+	private $logger;
+
+	public function __construct(IClientService $clientService, Capabilities $capabilities, LoggerInterface $logger) {
+		$this->clientService = $clientService;
+		$this->logger = $logger;
 		$this->capabilitites = $capabilities->getCapabilities()['previewproviderstl'] ?? [];
+		// Use the bundled stl-thumb binary from the vendor directory
+		// This ensures the plugin works in Docker containers where /usr/bin/stl-thumb is not available
+		$this->stlBinary = dirname(__DIR__, 2) . '/vendor/stl-thumb-bin/stl-thumb';
 	}
 
 	// /**
@@ -65,17 +73,17 @@ abstract class PreviewProvider implements IProviderV2 {
 	// }
 
 	public function isAvailable(\OCP\Files\FileInfo $file): bool {
-		// return true;
-		// TODO: remove when avconv is dropped
+		// Lazily resolve the binary path (allows config override via options)
 		if (is_null($this->binary)) {
 			if (isset($this->options['stlBinary'])) {
+				// Allow config override for custom binary path
 				$this->binary = $this->options['stlBinary'];
-			} elseif (is_string(self::$stlBinary)) {
-				// var_dump(self::$stlBinary);
-				$this->binary = self::$stlBinary;
+			} elseif (is_string($this->stlBinary)) {
+				$this->binary = $this->stlBinary;
 			}
 		}
-		return is_string($this->binary);
+		// Also verify the binary actually exists on disk
+		return is_string($this->binary) && file_exists($this->binary);
 	}
 
 	// /**
@@ -132,38 +140,68 @@ abstract class PreviewProvider implements IProviderV2 {
 
 		$binaryType = substr(strrchr($this->binary, '/'), 1);
 
-		if ($binaryType === 'stl-thumb') {
-			$cmd = [$this->binary, '-s', $maxX, $absPath, $tmpPath];
-		} else {
-			// Not supported
+		if ($binaryType !== 'stl-thumb') {
+			// Unsupported binary type
 			unlink($tmpPath);
 			return null;
 		}
 
-		$proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
-		$returnCode = -1;
-		$output = "";
-		if (is_resource($proc)) {
-			$stdout = trim(stream_get_contents($pipes[1]));
-			$stderr = trim(stream_get_contents($pipes[2]));
-			$returnCode = proc_close($proc);
-			$output = $stdout . $stderr;
-			// var_dump($output);
+		// Build command: stl-thumb -s [size] [input] [output]
+		$cmd = [$this->binary, '-s', $maxX, $absPath, $tmpPath];
+
+		$desc = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+		$proc = proc_open($cmd, $desc, $pipes);
+
+		if (!is_resource($proc)) {
+			$this->logger->warning('PreviewProviderSTL: Failed to start stl-thumb process');
+			unlink($tmpPath);
+			return null;
 		}
 
-		if ($returnCode === 0) {
-			$image = new \OCP\Image();
-			$image->loadFromFile($tmpPath);
-			if ($image->valid()) {
+		// Set a timeout of 30 seconds to avoid hanging requests
+		stream_set_blocking($pipes[1], false);
+		stream_set_blocking($pipes[2], false);
+		$start = time();
+		$timeout = 30;
+		$stdout = '';
+		$stderr = '';
+
+		while (!feof($pipes[1]) || !feof($pipes[2])) {
+			if ((time() - $start) > $timeout) {
+				proc_terminate($proc, SIGKILL);
+				$this->logger->warning('PreviewProviderSTL: stl-thumb process timed out');
+				proc_close($proc);
 				unlink($tmpPath);
-				$image->scaleDownToFit($maxX, $maxY);
-
-				return $image;
+				return null;
 			}
+			$stdout .= stream_get_contents($pipes[1]);
+			$stderr .= stream_get_contents($pipes[2]);
+			usleep(10000);
 		}
 
+		proc_close($proc);
+
+		if (!file_exists($tmpPath)) {
+			$this->logger->warning('PreviewProviderSTL: stl-thumb did not produce output', [
+				'stdout' => trim($stdout),
+				'stderr' => trim($stderr),
+			]);
+			return null;
+		}
+
+		$image = new \OCP\Image();
+		$image->loadFromFile($tmpPath);
 		unlink($tmpPath);
-		return null;
+
+		if (!$image->valid()) {
+			$this->logger->warning('PreviewProviderSTL: Failed to load generated image', [
+				'stderr' => trim($stderr),
+			]);
+			return null;
+		}
+
+		$image->scaleDownToFit($maxX, $maxY);
+		return $image;
 	}
 
 	protected function useTempFile(File $file): bool {
@@ -205,7 +243,10 @@ abstract class PreviewProvider implements IProviderV2 {
 	 */
 	protected function cleanTmpFiles(): void {
 		foreach ($this->tmpFiles as $tmpFile) {
-			unlink($tmpFile);
+			// Only unlink if file exists to avoid warnings
+			if (file_exists($tmpFile)) {
+				unlink($tmpFile);
+			}
 		}
 
 		$this->tmpFiles = [];

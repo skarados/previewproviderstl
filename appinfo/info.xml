@@ -19,6 +19,11 @@ The app does not replace the existing on demand preview generation.]]>
 	<types>
 		<filesystem/>
 	</types>
+	<repair-steps>
+		<install>
+			<step>OCA\PreviewProviderSTL\Repair\RegisterSTLMimeTypes</step>
+		</install>
+	</repair-steps>
 	<dependencies>
 		<php min-version="7.4" max-version="8.4" />
 		<nextcloud min-version="29" max-version="32" />
