@@ -63,7 +63,6 @@ class Application extends App implements IBootstrap {
 	public function register(IRegistrationContext $context): void {
 		$context->registerCapability(Capabilities::class);
 		$context->registerPreviewProvider(STL::class, STL::MIMETYPE_REGEX);
-		$context->registerConsoleCommand(GeneratePreviews::class);
 	}
 
 	public function boot(IBootContext $context): void {
