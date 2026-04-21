@@ -10,7 +10,7 @@ The app does not replace the existing on demand preview generation.]]>
 	</description>
 	<licence>AGPL</licence>
 	<author>Christian Witz</author>
-	<version>1.2.0</version>
+	<version>1.2.1</version>
 	<namespace>PreviewProviderSTL</namespace>
 	<category>multimedia</category>
 	<website>https://github.com/skarados/previewproviderstl</website>
@@ -19,6 +19,9 @@ The app does not replace the existing on demand preview generation.]]>
 	<types>
 		<filesystem/>
 	</types>
+	<commands>
+		<command>OCA\PreviewProviderSTL\Command\GeneratePreviews</command>
+	</commands>
 	<repair-steps>
 		<install>
 			<step>OCA\PreviewProviderSTL\Repair\RegisterSTLMimeTypes</step>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\PreviewProviderSTL\Command;
 
 use OCA\PreviewProviderSTL\Preview\STL;
+use OCP\AppConfig;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
@@ -40,6 +41,9 @@ class GeneratePreviews extends Command
 
 	/** @var OutputInterface */
 	private $output;
+
+	/** @var bool */
+	private $force = false;
 
 	public function __construct(
 		IRootFolder $rootFolder,
@@ -81,6 +85,12 @@ class GeneratePreviews extends Command
 				'Limit to a specific path (e.g., "/Documents")'
 			)
 			->addOption(
+				'force',
+				null,
+				InputOption::VALUE_NONE,
+				'Delete existing previews before generating new ones'
+			)
+			->addOption(
 				'verbose',
 				'v',
 				InputOption::VALUE_NONE,
@@ -91,6 +101,7 @@ class GeneratePreviews extends Command
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
 		$this->output = $output;
+		$this->force = $input->getOption('force') ?? false;
 
 		// Check if binary is available
 		if (!$this->stlProvider->isAvailable()) {
@@ -269,6 +280,11 @@ class GeneratePreviews extends Command
 	private function generatePreview(File $file): bool
 	{
 		try {
+			// Delete existing previews if force is enabled
+			if ($this->force) {
+				$this->deleteExistingPreviews($file);
+			}
+
 			// Use Nextcloud's preview system to generate the preview
 			// This will use our STL provider registered in Application.php
 			$wasCreated = $this->previewManager->generatePreview($file);
@@ -285,6 +301,40 @@ class GeneratePreviews extends Command
 				'exception' => $e,
 			]);
 			return false;
+		}
+	}
+
+	/**
+	 * Delete existing preview files for a given file
+	 */
+	private function deleteExistingPreviews(File $file): void
+	{
+		try {
+			$previewFolder = \OC::$server->getAppDataDir('previewproviderstl');
+			$fileId = $file->getFileId();
+
+			// Try to find and delete preview files in various possible locations
+			$dataDir = $this->config->getSystemValue('datadirectory', '');
+			if (empty($dataDir)) {
+				return;
+			}
+
+			// Common preview storage patterns
+			$patterns = [
+				$dataDir . '/appdata_*/preview/' . $fileId . '*',
+				$dataDir . '/*/appdata_*/preview/' . $fileId . '*',
+			];
+
+			foreach ($patterns as $pattern) {
+				$files = glob($pattern);
+				foreach ($files as $file) {
+					if (is_file($file)) {
+						unlink($file);
+					}
+				}
+			}
+		} catch (\Exception $e) {
+			// Ignore errors - preview will be regenerated anyway
 		}
 	}
 

@@ -150,23 +150,23 @@ abstract class PreviewProvider implements IProviderV2 {
 			return null;
 		}
 
-		// Calculate best rotation for the model (only for local files to avoid extra I/O)
-		$inputPath = $absPath;
-		$rotationAngle = 0;
+		// Skip large files to prevent server issues
+		$fileSize = filesize($absPath);
+		$maxFileSize = 250 * 1024 * 1024; // 250MB limit
 
-		if ($this->isLocalFile($absPath)) {
-			$orientation = new STLOrientation($this->logger);
-			$rotationAngle = $orientation->calculateBestRotation($absPath);
-
-			// Only apply rotation if angle is significant (> 5 degrees)
-			if (abs($rotationAngle) > 5) {
-				$rotatedPath = $orientation->rotateSTL($absPath, $rotationAngle);
-				if ($rotatedPath !== null) {
-					$inputPath = $rotatedPath;
-					$this->tmpFiles[] = $rotatedPath;
-				}
-			}
+		if ($fileSize > $maxFileSize) {
+			$this->logger->warning('PreviewProviderSTL: File too large, skipping', [
+				'size' => $fileSize,
+				'limit' => $maxFileSize,
+			]);
+			unlink($tmpPath);
+			return null;
 		}
+
+		$inputPath = $absPath;
+
+		// Skip rotation for problematic files (disable until properly tuned)
+		// Rotation can cause issues with complex models. Use default view instead.
 
 		// Build command: stl-thumb -s [size] [input] [output]
 		$cmd = [$this->binary, '-s', $maxX, $inputPath, $tmpPath];

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.1 – 2026-04-21
+### Fixed
+- Disabled auto-orientation (caused issues with complex models)
+- Added file size limit (250MB) to prevent server overload
+- Added --force flag to OCC command for regenerating previews
+
+### Changed
+- OCC command now deletes existing preview before generating new one
+- Improved error handling for large files
+
 ## 1.2.0 – 2026-04-21
 ### Added
 - Auto-orientation feature for STL thumbnails

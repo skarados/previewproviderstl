@@ -21,6 +21,7 @@ The app does not replace the existing on demand preview generation.
 
 - Nextcloud 29-32
 - PHP 7.4+
+- Maximum file size: 50MB (larger files are skipped)
 
 ## Installation
 
@@ -54,6 +55,9 @@ occ preview:generate-stl username --path="/Documents/3D"
 
 # Generate previews for ALL users
 occ preview:generate-stl
+
+# Force regenerate (delete existing previews first)
+occ preview:generate-stl --force
 
 # Verbose output
 occ preview:generate-stl -v
