@@ -150,8 +150,26 @@ abstract class PreviewProvider implements IProviderV2 {
 			return null;
 		}
 
+		// Calculate best rotation for the model (only for local files to avoid extra I/O)
+		$inputPath = $absPath;
+		$rotationAngle = 0;
+
+		if ($this->isLocalFile($absPath)) {
+			$orientation = new STLOrientation($this->logger);
+			$rotationAngle = $orientation->calculateBestRotation($absPath);
+
+			// Only apply rotation if angle is significant (> 5 degrees)
+			if (abs($rotationAngle) > 5) {
+				$rotatedPath = $orientation->rotateSTL($absPath, $rotationAngle);
+				if ($rotatedPath !== null) {
+					$inputPath = $rotatedPath;
+					$this->tmpFiles[] = $rotatedPath;
+				}
+			}
+		}
+
 		// Build command: stl-thumb -s [size] [input] [output]
-		$cmd = [$this->binary, '-s', $maxX, $absPath, $tmpPath];
+		$cmd = [$this->binary, '-s', $maxX, $inputPath, $tmpPath];
 
 		$desc = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
 		$proc = proc_open($cmd, $desc, $pipes);
@@ -206,6 +224,14 @@ abstract class PreviewProvider implements IProviderV2 {
 
 		$image->scaleDownToFit($maxX, $maxY);
 		return $image;
+	}
+
+	/**
+	 * Check if file is a local file (not encrypted/remote)
+	 */
+	private function isLocalFile(string $path): bool
+	{
+		return is_readable($path) && is_file($path);
 	}
 
 	protected function useTempFile(File $file): bool {

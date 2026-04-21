@@ -11,6 +11,12 @@ The app does not replace the existing on demand preview generation.
 - `model/obj` (Wavefront OBJ)
 - `model/3mf` (3D Manufacturing Format)
 
+## Features
+
+- **Auto-orientation**: Automatically detects flat models and rotates them for optimal visibility
+- Generates thumbnails on-demand via Nextcloud's preview system
+- No external dependencies - includes bundled `stl-thumb` binary
+
 ## Requirements
 
 - Nextcloud 29-32
@@ -28,17 +34,13 @@ The app does not replace the existing on demand preview generation.
    occ app:enable previewproviderstl
    ```
 
-The bundled `stl-thumb` binary is included - no additional system packages needed.
-
 ## Usage
 
 ### Automatic Previews
 
 Previews are generated automatically when users view 3D files in Nextcloud.
 
-### Generate Previews Manually
-
-Use the OCC command to generate previews:
+### OCC Command
 
 ```bash
 # Generate preview for a specific file by ID
@@ -60,6 +62,7 @@ occ preview:generate-stl -v
 ## How It Works
 
 1. When a user views a 3D model file, Nextcloud's preview system requests a thumbnail
-2. The STL preview provider handles the request
-3. It uses the bundled `stl-thumb` binary to render the 3D model as an image
-4. The image is scaled to fit the requested dimensions and returned
+2. The STL preview provider analyzes the model's geometry to detect flatness
+3. If needed, the model is rotated automatically using pure PHP
+4. The bundled `stl-thumb` renders the 3D model as an image
+5. The image is scaled to fit the requested dimensions

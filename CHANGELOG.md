@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 – 2026-04-21
+### Added
+- Auto-orientation feature for STL thumbnails
+  - Detects flat models and rotates them for better visibility
+  - Pure PHP rotation (no external dependencies)
+  - Calculates bounding box to determine optimal view angle
+
 ## 1.1.0 – 2026-04-21
 ### Added
 - MIME type registration repair step (no longer requires 3D Viewer app)
